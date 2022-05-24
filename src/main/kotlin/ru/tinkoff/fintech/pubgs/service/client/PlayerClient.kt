@@ -20,27 +20,33 @@ class PlayerClient(
 
     fun getPlayersByName(platform: String, names: String): MutableList<Player> {
 
-        val response = restTemplate.exchange<String>(
-            "https://api.pubg.com/shards/$platform/players?filter[playerNames]=$names",
-            HttpMethod.GET,
-            apiSettings
-        )
-
-        val parser: Parser = Parser.default()
-        val stringBuilder: StringBuilder = StringBuilder(response.body.toString())
-        val playersJsonObjects: JsonArray<JsonObject> = ((parser.parse(stringBuilder) as JsonObject)["data"] as JsonArray<JsonObject>)
         var players = mutableListOf<Player>()
-        playersJsonObjects.forEach {
-            var p = Player(
-                (it["attributes"] as JsonObject)["name"].toString(),
-                it["id"].toString(),
-                (it["attributes"] as JsonObject)["shardId"].toString(),
-                null
-            )
-            players.add(p)
-        }
 
-        return players
+        try {
+            val response = restTemplate.exchange<String>(
+                "https://api.pubg.com/shards/$platform/players?filter[playerNames]=$names",
+                HttpMethod.GET,
+                apiSettings
+            )
+            val parser: Parser = Parser.default()
+            val stringBuilder: StringBuilder = StringBuilder(response.body.toString())
+            val playersJsonObjects: JsonArray<JsonObject> = ((parser.parse(stringBuilder) as JsonObject)["data"] as JsonArray<JsonObject>)
+
+            playersJsonObjects.forEach {
+                var p = Player(
+                    (it["attributes"] as JsonObject)["name"].toString(),
+                    it["id"].toString(),
+                    (it["attributes"] as JsonObject)["shardId"].toString(),
+                    "",
+                    null
+                )
+                players.add(p)
+            }
+
+            return players
+        } catch (e: Exception){
+            return players
+        }
     }
 
     fun getSeasonForPlayer(seasonId: String, player: Player)

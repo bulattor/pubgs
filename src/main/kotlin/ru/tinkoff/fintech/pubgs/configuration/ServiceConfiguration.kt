@@ -1,11 +1,14 @@
 package ru.tinkoff.fintech.pubgs.configuration
 
+import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.web.client.RestTemplate
+import ru.tinkoff.fintech.pubgs.PlayerInfo
+import ru.tinkoff.fintech.pubgs.PlayerRepository
 import java.time.Duration
 
 @Configuration
@@ -26,6 +29,11 @@ class ServiceConfiguration {
             "Authorization",
             "Bearer $API_KEY")
         return HttpEntity<String>(headers)
+    }
+
+    @Bean
+    fun databaseInitializer(playerRepository: PlayerRepository) = ApplicationRunner {
+        val bulattor = playerRepository.save(PlayerInfo("account.107a252b59da453f98e4418627a7ac85","Sleepy one"))
     }
 }
 

@@ -1,16 +1,20 @@
 package ru.tinkoff.fintech.pubgs
 
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.ui.set
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import ru.tinkoff.fintech.pubgs.service.client.PlayerClient
 
 @Controller
 class HtmlController(
-    private val playerClient: PlayerClient
+    private val playerClient: PlayerClient,
+    @Autowired private val repository: PlayerRepository
 ) {
     @GetMapping("/")
     fun index(model: Model): String {
@@ -25,12 +29,13 @@ class HtmlController(
         @RequestParam seasonId: String,
         @RequestParam playerNames: String,
         @RequestParam sortIn: String?,
-        @RequestParam sortBy: String?
+        @RequestParam sortBy: String?,
     ): String {
 
         var players = playerClient.getPlayersByName(platform, playerNames)
         players.forEach {
             playerClient.getSeasonForPlayer(seasonId, it)
+            it.info = repository.findByIdOrNull(it.id)?.info ?: ""
         }
 
         if (sortBy != null) {
@@ -60,5 +65,23 @@ class HtmlController(
         model["players"] = players
 
         return "player"
+    }
+
+    @PostMapping("/postinfo")
+    fun postInfoById(
+        @RequestParam playerId: String,
+        @RequestParam info: String,
+    ){
+        if(repository.existsById(playerId))
+        {
+            var playerInfo = repository.findByIdOrNull(playerId)
+            if (playerInfo != null) {
+                playerInfo.info = info
+                repository.save(
+                    playerInfo
+                )
+            }
+
+        }
     }
 }
